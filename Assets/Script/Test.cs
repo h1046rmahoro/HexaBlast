@@ -1,11 +1,15 @@
 using SB;
 using UnityEngine;
+using UnityEngine.Serialization;
+
 
 public class Test : MonoBehaviour
 {
+    [SerializeField]
+    private SpriteRenderer _sprRenderer = null;
 
     [SerializeField]
-    private SpriteRenderer renderer = null;
+    private GamePresenter gamePresenter = null;
     
     // Update is called once per frame
     void Update()
@@ -13,15 +17,19 @@ public class Test : MonoBehaviour
         if (!Input.GetMouseButton(0))
             return;
 
-        Hexagon hexagon = new Hexagon(Vector2.zero);
-        
         var mPos = Input.mousePosition;
 
         var pos = Camera.main.ScreenToWorldPoint(mPos);
         pos.z = 0;
         transform.position = pos;
 
-        Debug.Log($"isContains : {hexagon.IsContainsPosition(transform.position)}");
-        renderer.color = hexagon.IsContainsPosition(transform.position) ? Color.green : Color.red;
+        if (Input.GetMouseButtonDown(0))
+        {
+            gamePresenter.Touch(TouchPhase.Began, pos);
+        }
+        else
+        {
+            gamePresenter.Touch(TouchPhase.Moved, pos);
+        }
     }
 }

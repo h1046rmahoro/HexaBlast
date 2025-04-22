@@ -6,36 +6,29 @@ namespace SB
     public class GamePresenter : MonoBehaviour
     {
         [SerializeField]
-        private BoardView _boardView = null;
-        
+        private GameView gameView = null;
+
+        private GameModel _gameModel = null;
+
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
-            List<List<Cell>> cells = new List<List<Cell>>();
-
-            Vector2 origin = new Vector2(-315, -360);
-
-            float shift = 0;
+            _gameModel = new GameModel();
+            _gameModel.OnBlockMove += UpdateBlockMove;
             
-            for (int x = 0; x < 13; ++x)
-            {
-                // 짝수줄 반칸 설정 
-                shift = (x % 2 == 0) ? 0 : 30;
-                
-                cells.Add(new List<Cell>());
-                for (int y = 0; y < 13; ++y)
-                {
-                    cells[x].Add(new Cell(origin.x + (52.5f * x), origin.y + (y * 60) + shift));
-                }
-            }
-
-            _boardView.InitBoard(cells);
+            gameView.InitBoard(_gameModel.CellDataList);
         }
 
-        // Update is called once per frame
-        void Update()
+        public void Touch(TouchPhase touchPhase, Vector2 position)
         {
-        
+            _gameModel.SwapBlock(touchPhase, position);
         }
+
+        private void UpdateBlockMove(List<BlockMoveData> moveDatas)
+        {
+            gameView.BlockMove(moveDatas);
+        }
+        
+        
     }
 }
