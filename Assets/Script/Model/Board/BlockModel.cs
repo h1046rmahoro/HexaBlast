@@ -6,7 +6,7 @@ namespace SB
     public class BlockModel
     {
         private static int _uniqueKeyGenerator = 0;
-        
+
         public enum Type
         {
             None,
@@ -37,6 +37,24 @@ namespace SB
         /// </summary>
         public int UniqueKey => _uniqueKey;
 
+        private int _hp = 1;
+
+        /// <summary>
+        /// 블록 체력 
+        /// </summary>
+        public int Hp
+        {
+            get => _hp;
+            set
+            {
+                _hp = value;
+
+                if (_hp <= 0)
+                {
+                }
+            }
+        }
+
         /// <summary>
         /// 스왑 가능여부 
         /// </summary>
@@ -65,6 +83,9 @@ namespace SB
         {
             _type = type;
             _uniqueKey = ++_uniqueKeyGenerator;
+
+            if (type == Type.Top)
+                Hp = 2;
         }
     }
 }

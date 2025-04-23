@@ -14,8 +14,9 @@ namespace SB
         void Start()
         {
             _gameModel = new GameModel();
-            _gameModel.OnBlockMove += UpdateBlockMove;
-            
+            _gameModel.OnBlockEffect += BlockEffect;
+
+            gameView.OnEffectFinish += EffectFinish;
             gameView.InitBoard(_gameModel.CellDataList);
         }
 
@@ -24,11 +25,14 @@ namespace SB
             _gameModel.SwapBlock(touchPhase, position);
         }
 
-        private void UpdateBlockMove(List<BlockMoveData> moveDatas)
+        private void BlockEffect(List<EffectData> effectDatas)
         {
-            gameView.BlockMove(moveDatas);
+            gameView.BlockEffect(effectDatas);
         }
-        
-        
+
+        private void EffectFinish()
+        {
+            _gameModel.EffectFinish();
+        }
     }
 }

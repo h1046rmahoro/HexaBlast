@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SB
@@ -38,24 +39,57 @@ namespace SB
 
         private float speed = 300.0f;
 
-        public void Move(BlockMoveData moveData)
+        private Coroutine moveRoutine = null;
+
+        private Queue<EffectData> _blockMoveDatas = new Queue<EffectData>();
+
+        public void EffectAction(EffectData moveData, Action finishCallback)
         {
-            StopAllCoroutines();
-            StartCoroutine(MoveRoutine(moveData.TargetPos, moveData.BottomCell));
+            _blockMoveDatas.Enqueue(moveData);
+            
+            if (moveRoutine == null)
+            {
+                moveRoutine = StartCoroutine(EffectRoutine(finishCallback));                
+            }
         }
 
-        private IEnumerator MoveRoutine(Vector2 targetPos, CellModel bottom)
+        private IEnumerator EffectRoutine(Action finishCallback)
+        {
+            while(_blockMoveDatas.Count > 0)
+            {
+                var data = _blockMoveDatas.Dequeue();
+
+                switch (data.Type)
+                {
+                    case EffectData.EffectType.Move:
+                        yield return MoveRoutine(data, finishCallback);
+                        break;
+                    case EffectData.EffectType.Damage:
+                        _sprRenderer.enabled = false;
+                        finishCallback.Invoke();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            moveRoutine = null;
+        }
+
+        private IEnumerator MoveRoutine(EffectData data, Action finishCallback)
         {
             Vector3 origin = transform.position;
-            Vector3 target = targetPos;
-
-
+            Vector3 target = data.MoveData.TargetPos;
+                
             while (transform.position != target)
             {
-                 var pos = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
-                 transform.position = pos;
-                 yield return null;
+                var pos = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+                transform.position = pos;
+                yield return null;
             }
+            
+            
+            finishCallback.Invoke();
         }
     }
 }
