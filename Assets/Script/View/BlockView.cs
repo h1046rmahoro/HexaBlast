@@ -13,6 +13,9 @@ namespace SB
         [SerializeField]
         private Sprite[] _sprNormal = null;
 
+        public int UniqueKey { get; set; }            
+
+
         /// <summary>
         /// 블록 이미지 설정 
         /// </summary>
@@ -41,11 +44,11 @@ namespace SB
 
         private Coroutine moveRoutine = null;
 
-        private Queue<EffectData> _blockMoveDatas = new Queue<EffectData>();
+        private Queue<EffectData> _blockEffectDatas = new Queue<EffectData>();
 
-        public void EffectAction(EffectData moveData, Action finishCallback)
+        public void EffectAction(EffectData moveData, Action<int, int> finishCallback)
         {
-            _blockMoveDatas.Enqueue(moveData);
+            _blockEffectDatas.Enqueue(moveData);
             
             if (moveRoutine == null)
             {
@@ -53,11 +56,11 @@ namespace SB
             }
         }
 
-        private IEnumerator EffectRoutine(Action finishCallback)
+        private IEnumerator EffectRoutine(Action<int, int> finishCallback)
         {
-            while(_blockMoveDatas.Count > 0)
+            while(_blockEffectDatas.Count > 0)
             {
-                var data = _blockMoveDatas.Dequeue();
+                var data = _blockEffectDatas.Dequeue();
 
                 switch (data.Type)
                 {
@@ -66,7 +69,7 @@ namespace SB
                         break;
                     case EffectData.EffectType.Damage:
                         _sprRenderer.enabled = false;
-                        finishCallback.Invoke();
+                        finishCallback.Invoke(UniqueKey, _blockEffectDatas.Count);
                         break;
                     default:
                         break;
@@ -76,7 +79,7 @@ namespace SB
             moveRoutine = null;
         }
 
-        private IEnumerator MoveRoutine(EffectData data, Action finishCallback)
+        private IEnumerator MoveRoutine(EffectData data, Action<int, int> finishCallback)
         {
             Vector3 origin = transform.position;
             Vector3 target = data.MoveData.TargetPos;
@@ -88,8 +91,7 @@ namespace SB
                 yield return null;
             }
             
-            
-            finishCallback.Invoke();
+            finishCallback.Invoke(UniqueKey, _blockEffectDatas.Count);
         }
     }
 }

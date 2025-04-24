@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NUnit.Compatibility;
 using UnityEngine;
 
 namespace SB
@@ -167,30 +168,129 @@ namespace SB
             return _hexagon.IsContainsPosition(position);
         }
 
+        public List<EffectData> PullBlock()
+        {
+            List<EffectData> moveData = new List<EffectData>();
+
+            if (!IsEnable)
+                return moveData;
+            
+            if (Block != null)
+                return moveData;
+            
+            BlockModel blockModel = null;
+            CellModel topCell = Top;
+            CellModel targetCell = null;
+
+            // 상단 블록 찾기 
+            while (topCell != null && blockModel == null)
+            {
+                // 블록이 연출중인경우 이동 할 수 없음 
+                if(topCell.Block != null)
+                {
+                    if (topCell.Block.IsEffect)
+                        break;
+                }
+                
+                blockModel = topCell.Block;
+                targetCell = topCell;
+                
+                // 상단블록 설정 
+                topCell = topCell.Top;
+            }
+
+            // 블록이 있는 경우 위치 변경 
+            if (blockModel != null)
+            {
+                return SwapBlock(targetCell);
+            }
+            
+            return moveData;
+        }
+
+        public List<EffectData> PullBlockSide()
+        {
+            List<EffectData> moveData = new List<EffectData>();
+
+            if (!IsEnable)
+                return moveData;
+            
+            if (Block != null)
+                return moveData;
+            
+            BlockModel blockModel = null;
+            CellModel targetCell = null;
+            
+            // 좌상단 블록 찾기 
+            if (blockModel == null && LeftTop != null)
+            {
+                // 블록이 연출중인경우 이동 할 수 없음 
+                if(LeftTop.Block != null)
+                {
+                    if (!LeftTop.Block.IsEffect)
+                    {
+                        blockModel = LeftTop.Block;
+                        targetCell = LeftTop;
+                    }
+                }
+            }
+            
+            // 우상단 블록 찾기 
+            if (blockModel == null && RightTop != null)
+            {
+                // 블록이 연출중인경우 이동 할 수 없음 
+                if(RightTop.Block != null)
+                {
+                    if (!RightTop.Block.IsEffect)
+                    {
+                        blockModel = RightTop.Block;
+                        targetCell = RightTop;
+                    }
+                }
+            }
+
+            // 블록이 있는 경우 위치 변경 
+            if (blockModel != null)
+            {
+                return SwapBlock(targetCell);
+            }
+            
+            return moveData;
+            
+        }
+
         public List<EffectData> SwapBlock(CellModel swapTarget)
         {
-            Debug.Log($"swapblock");
-            
             List<BlockMoveData> moveData = new List<BlockMoveData>();
 
             // 블록 스왑 
             (swapTarget.Block, Block) = (Block, swapTarget.Block);
 
-            BlockMoveData data = new BlockMoveData
+            BlockMoveData data;
+            
+            if(Block != null)
             {
-                TargetBlockUniqueKey = Block.UniqueKey,
-                TargetPos = Position,
-                BottomCell = Bottom
-            };
-            moveData.Add(data);
+                data = new BlockMoveData()
+                {
+                    TargetBlockUniqueKey = Block.UniqueKey,
+                    TargetPos = Position,
+                    BottomCell = Bottom
+                };
+                moveData.Add(data);
+                Block.IsEffect = true;
+            }
 
-            data = new BlockMoveData()
+            if (swapTarget.Block != null)
             {
-                TargetBlockUniqueKey = swapTarget.Block.UniqueKey,
-                TargetPos = swapTarget.Position,
-                BottomCell = swapTarget.Bottom
-            };
-            moveData.Add(data);
+                data = new BlockMoveData()
+                {
+                    TargetBlockUniqueKey = swapTarget.Block.UniqueKey,
+                    TargetPos = swapTarget.Position,
+                    BottomCell = swapTarget.Bottom
+                };
+                moveData.Add(data);
+                swapTarget.Block.IsEffect = true;
+            }
 
             List<EffectData> effectDatas = new List<EffectData>();
             foreach (var blockMoveData in moveData)
@@ -204,72 +304,6 @@ namespace SB
             }
 
             return effectDatas;
-
-            /*
-            // 매칭 검사
-            var matchOrigin = MatchCheck();
-            var matchTarget = swapTarget.MatchCheck();
-
-            List<BlockDamageData> matchData = new List<BlockDamageData>();
-            foreach (var damageData in matchOrigin)
-            {
-                bool isContains = false;
-                foreach (var blockDamageData in matchOrigin)
-                {
-                    if (blockDamageData.UniqueKey == damageData.UniqueKey)
-                    {
-                        isContains = true;
-                        break;
-                    }
-                }
-                if (!isContains)
-                    matchData.Add(damageData);
-            }
-            
-            foreach (var damageData in matchTarget)
-            {
-                bool isContains = false;
-                foreach (var blockDamageData in matchOrigin)
-                {
-                    if (blockDamageData.UniqueKey == damageData.UniqueKey)
-                    {
-                        isContains = true;
-                        break;
-                    }
-                }
-                if (!isContains)
-                    matchData.Add(damageData);
-            }
-
-            // 매칭 되지 않은경우 돌아감 
-            if (matchData.Count < 3)
-            {
-                // 블록 스왑 
-                (swapTarget.Block, Block) = (Block, swapTarget.Block);
-
-                data = new BlockMoveData
-                {
-                    TargetBlockUniqueKey = Block.UniqueKey,
-                    TargetPos = Position,
-                    BottomCell = Bottom
-                };
-                moveData.Add(data);
-
-                data = new BlockMoveData()
-                {
-                    TargetBlockUniqueKey = swapTarget.Block.UniqueKey,
-                    TargetPos = swapTarget.Position,
-                    BottomCell = swapTarget.Bottom
-                };
-                moveData.Add(data);
-            }
-            else
-            {
-                OnBlockDamage?.Invoke(matchData);
-            }
-            
-            return moveData;
-*/
         }
 
         /// <summary>

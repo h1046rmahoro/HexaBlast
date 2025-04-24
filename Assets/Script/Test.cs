@@ -1,6 +1,5 @@
 using SB;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 
 public class Test : MonoBehaviour
@@ -10,7 +9,12 @@ public class Test : MonoBehaviour
 
     [SerializeField]
     private GamePresenter gamePresenter = null;
-    
+
+    private void Start()
+    {
+        Time.timeScale = 0.1f;
+    }
+
     // Update is called once per frame
     void Update()
     {

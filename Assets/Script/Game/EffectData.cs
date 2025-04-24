@@ -9,6 +9,7 @@ namespace SB
         {
             Move,
             Damage,
+            Generate,
         }
 
         /// <summary>
@@ -30,5 +31,10 @@ namespace SB
         /// 블록 데미지 데이터 
         /// </summary>
         public BlockDamageData DamageData;
+
+        /// <summary>
+        /// 블록 생성 이벤트 
+        /// </summary>
+        public BlockGenerateData GenerateData;
     }
 }

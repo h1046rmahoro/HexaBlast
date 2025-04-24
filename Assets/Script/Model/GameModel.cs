@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 
 namespace SB
@@ -28,14 +29,19 @@ namespace SB
         */
 
         /// <summary>
+        /// 생성 된 블록 들 
+        /// </summary>
+        private Dictionary<int, BlockModel> _blockModels = new Dictionary<int, BlockModel>();
+
+        /// <summary>
         /// 셀 리스트 
         /// </summary>
         private List<List<CellModel>> _cells = new List<List<CellModel>>();
 
         /// <summary>
-        /// 블록 리스트 
+        /// 블록 생성 셀 
         /// </summary>
-        private List<BlockModel> _blocks = new List<BlockModel>();
+        private List<CellModel> _generateCells = new List<CellModel>();
 
         /// <summary>
         /// 셀 데이터  
@@ -104,13 +110,16 @@ namespace SB
                 case State.Matching:
                     break;
                 case State.Damage:
-                    // GameState = State.Move;
-                    GameState = State.Wait;
+                    GameState = State.Move;
+                    MoveBlock();
+                    BlockGenerate();
                     break;
                 case State.SwapBack:
                     GameState = State.Wait;
                     break;
                 case State.Move:
+                    MoveBlock();
+                    BlockGenerate();
                     break;
                 case State.MoveCheck:
                     break;
@@ -119,6 +128,15 @@ namespace SB
             }
             
             Debug.Log($"state : {GameState}");
+        }
+
+        public void Update()
+        {
+            if (GameState == State.Move)
+            {
+                // MoveBlock();
+                // BlockGenerate();
+            }
         }
 
         private void CheckSwapMatch()
@@ -157,18 +175,15 @@ namespace SB
                     matchData.Add(damageData);
             }
 
-            Debug.Log($"match Data : {matchData.Count}");
-
             if (matchData.Count >= 3)
             {
-                //
+                // 매칭된 블록 데미지 
                 BlockDamageEvent(matchData);
-
             }
             else
             {   // 스왑 되돌아가기 
                 GameState = State.SwapBack;
-                var blockMoveData = SwapBlock(_touchCell, _targetCell);
+                var blockMoveData = _touchCell.SwapBlock(_targetCell);
                 
                 // 스왑 이벤트 호출 
                 OnBlockEffect?.Invoke(blockMoveData);
@@ -203,17 +218,31 @@ namespace SB
                     cell.IsEnable = blockType != 0;
 
                     // 블록 생성 
-                    var block = cell.CreateBlock(blockType);
-                    if (block != null)
-                        _blocks.Add(block);
+                    var blockModel = cell.CreateBlock(blockType);
+                    RegistBlock(blockModel);
 
                     // 블록 데미지 이벤트 추가 
                     cell.OnBlockDamage += BlockDamageEvent;
 
                     // 셀 추가 
                     _cells[x].Add(cell);
+
+                    // 블록 생성 셀 추가 
+                    if (blockType == 99)
+                        _generateCells.Add(cell);
                 }
             }
+        }
+
+        /// <summary>
+        /// 블록 등록 
+        /// </summary>
+        /// <param name="blockModel"> 등록 할 블록  </param>
+        private void RegistBlock(BlockModel blockModel)
+        {
+            if (blockModel == null)
+                return;
+            _blockModels.Add(blockModel.UniqueKey, blockModel);
         }
         
         /// <summary>
@@ -301,7 +330,7 @@ namespace SB
         private bool _isSwapAble = false;
         
         /// <summary>
-        /// 블록 스왑 시도 
+        /// 터치로 블록 스왑 시도 
         /// </summary>
         /// <param name="touchPhase"> 터치 종류 </param>
         /// <param name="position"> 터치 좌표 </param>
@@ -364,7 +393,7 @@ namespace SB
                 // 블록 스왑
                 _isSwapAble = false;
                 GameState = State.Swap;
-                var blockMoveData =  SwapBlock(_touchCell, _targetCell);
+                var blockMoveData = _touchCell.SwapBlock(_targetCell);
                 
                 // 스왑 이벤트 호출 
                 OnBlockEffect?.Invoke(blockMoveData);
@@ -372,10 +401,6 @@ namespace SB
             }
         }
 
-        public List<EffectData> SwapBlock(CellModel touchCell, CellModel targetCell)
-        {
-            return touchCell.SwapBlock(targetCell);
-        }
 
         public void BlockDamageEvent(List<BlockDamageData> damageData)
         {
@@ -400,21 +425,69 @@ namespace SB
             OnBlockEffect?.Invoke(effectDatas);
         }
 
+        /// <summary>
+        /// 블록 생성 
+        /// </summary>
         private void BlockGenerate()
         {
+            List<EffectData> effectDatas = new List<EffectData>();
             
+            foreach (var cell in _generateCells)
+            {
+                if (cell.Bottom != null && cell.Bottom.Block == null)
+                {
+                    // 블록 생성 
+                    var blockModel = cell.CreateBlock(UnityEngine.Random.Range(0, 6) + 1);
+                    RegistBlock(blockModel);
+                    
+                    // 블록 생성 이펙트  
+                    effectDatas.Add(new EffectData()
+                    {
+                        Type = EffectData.EffectType.Generate,
+                        UniqueKey = 0,
+                        GenerateData = new BlockGenerateData(){BlockModel = blockModel, Position = cell.Position}
+                    });
+
+                    // 블록 하단 이동 
+                    effectDatas.AddRange(cell.SwapBlock(cell.Bottom));
+                }
+            }
+
+            OnBlockEffect?.Invoke(effectDatas);
         }
 
         private void MoveBlock()
         {
+            List<EffectData> effectDatas = new List<EffectData>();
             
+            for (int y = 0; y < YCount; ++y)
+            {
+                for (int x = 0; x < XCount; ++x)
+                {
+                    effectDatas.AddRange(_cells[x][y].PullBlock());
+                }
+            }
+            
+            for (int y = 0; y < YCount; ++y)
+            {
+                for (int x = 0; x < XCount; ++x)
+                {
+                    effectDatas.AddRange(_cells[x][y].PullBlockSide());
+                }
+            }
+            
+            OnBlockEffect?.Invoke(effectDatas);
         }
 
         private void MatchingCheck()
         {
             
         }
-        
+
+        public void BlockEffectComplete(int uniqueKey)
+        {
+            _blockModels[uniqueKey].IsEffect = false;
+        }
         
     }
 }

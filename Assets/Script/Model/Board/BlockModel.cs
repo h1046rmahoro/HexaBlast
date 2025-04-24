@@ -79,6 +79,11 @@ namespace SB
             }
         }
 
+        /// <summary>
+        /// 이펙트 재생중 여부 
+        /// </summary>
+        public bool IsEffect = false;
+
         public BlockModel(Type type)
         {
             _type = type;
