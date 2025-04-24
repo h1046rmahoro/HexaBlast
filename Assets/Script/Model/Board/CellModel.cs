@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Compatibility;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace SB
@@ -115,6 +116,19 @@ namespace SB
             }
 
             return _block;
+        }
+
+        /// <summary>
+        /// 같은 블록인지 검사 
+        /// </summary>
+        /// <param name="blockType"> 검사할 블록 종류 </param>
+        /// <returns> 같은 블록 여부 </returns>
+        public bool IsSameBlock(BlockModel.Type blockType)
+        {
+            if (Block == null)
+                return false;
+            
+            return Block.BlockType == blockType;
         }
 
         /// <summary>
@@ -350,6 +364,24 @@ namespace SB
             if (!Block.IsMatchAble)
                 return matchBlock;
 
+            var square = MatchSquareCheck();
+            foreach (var data in square)
+            {
+                bool isContains = false;
+                foreach (var blockDamageData in matchBlock)
+                {
+                    if (blockDamageData.UniqueKey == data.UniqueKey)
+                    {
+                        isContains = true;
+                        break;
+                    }
+                }
+                if (!isContains)
+                    matchBlock.Add(data);
+            }
+
+            Debug.Log($"square : {matchBlock.Count}");
+
             var lt = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.LeftTop }, type);
             var t = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.Top }, type);
             var rt = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.RightTop }, type);
@@ -526,5 +558,128 @@ namespace SB
 
             return matchData;
         }
+
+        /// <summary>
+        /// 근처의 같은 블록 개수 
+        /// </summary>
+        /// <returns> 같은 블록 개수 </returns>
+        public int GetNearSameBlockCount()
+        {
+            // 블록이 없는경우 같은 블록 없음 
+            if (Block == null)
+                return 0;
+
+            int count = 0;
+
+            var blockType = Block.BlockType;
+            if (LeftTop.IsSameBlock(blockType)) ++count;
+            if (Top.IsSameBlock(blockType)) ++count;
+            if (RightTop.IsSameBlock(blockType)) ++count;
+            if (RightBottom.IsSameBlock(blockType)) ++count;
+            if (Bottom.IsSameBlock(blockType)) ++count;
+            if (LeftBottom.IsSameBlock(blockType)) ++count;
+
+            return count;
+        }
+
+        private List<BlockDamageData> MatchSquareCheck()
+        {
+            List<BlockDamageData> matchData = new List<BlockDamageData>();
+            
+            // 블록이 없는경우 검사 불가능 
+            if (Block == null)
+                return matchData;
+            
+            var blockType = Block.BlockType;
+
+            if (LeftTop.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(LeftTop));
+            }
+            if (Top.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(Top));
+            }
+            if (RightTop.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(RightTop));
+            }
+            if (RightBottom.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(RightBottom));
+            }
+            if (Bottom.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(Bottom));
+            }
+            if (LeftBottom.IsSameBlock(blockType))
+            {
+                matchData.AddRange(MatchSquareCheck(LeftBottom));
+            }
+
+            matchData.AddRange(MatchSquareCheck(this));
+            
+            return matchData;
+        }
+        
+        private List<BlockDamageData> MatchSquareCheck(CellModel cellModel)
+        {
+            List<BlockDamageData> matchData = new List<BlockDamageData>();
+
+            // 블록이 없는경우 검사 불가능 
+            if (Block == null)
+                return matchData;
+
+            var blockType = Block.BlockType;
+
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.LeftTop, cellModel.Top, cellModel.RightTop));
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.Top, cellModel.RightTop, cellModel.RightBottom));
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.RightTop, cellModel.RightBottom, cellModel.Bottom));
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.RightBottom, cellModel.Bottom, cellModel.LeftBottom));
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.Bottom, cellModel.LeftBottom, cellModel.LeftTop));
+            matchData.AddRange(cellModel.MatchSquareCheckThree(blockType, cellModel.LeftBottom, cellModel.LeftTop, cellModel.Top));
+            
+            return matchData;
+        }
+
+        /// <summary>
+        /// 4개 블록 매칭여부 검사 
+        /// </summary>
+        /// <param name="blockType"></param>
+        /// <param name="left"></param>
+        /// <param name="center"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        private List<BlockDamageData> MatchSquareCheckThree(BlockModel.Type blockType, CellModel left, CellModel center, CellModel right)
+        {
+            List<BlockDamageData> matchData = new List<BlockDamageData>();
+            
+            // 셀이 빈경우 매칭 불가 
+            if (left == null)
+                return matchData;
+            if (center == null)
+                return matchData;
+            if (right == null)
+                return matchData;
+            
+            // 블록이 없는경우 매칭 불가 
+            if (left.Block == null)
+                return matchData;
+            if (center.Block == null)
+                return matchData;
+            if (right.Block == null)
+                return matchData;
+
+            if (left.Block.BlockType == blockType && center.Block.BlockType == blockType &&
+                right.Block.BlockType == blockType)
+            {
+                matchData.Add(new BlockDamageData(){Cell = left, UniqueKey = left.Block.UniqueKey});
+                matchData.Add(new BlockDamageData(){Cell = center, UniqueKey = center.Block.UniqueKey});
+                matchData.Add(new BlockDamageData(){Cell = right, UniqueKey = right.Block.UniqueKey});
+            }
+
+            return matchData;
+        }
+        
     }
 }

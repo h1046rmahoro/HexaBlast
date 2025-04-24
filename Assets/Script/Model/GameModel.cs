@@ -532,7 +532,6 @@ namespace SB
                 }
             }
 
-            Debug.Log($"match : {damageDatas.Count}");
             BlockDamageEvent(damageDatas);
 
             return damageDatas.Count > 0;

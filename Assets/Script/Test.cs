@@ -1,5 +1,6 @@
 using SB;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 public class Test : MonoBehaviour
@@ -12,12 +13,18 @@ public class Test : MonoBehaviour
 
     private void Start()
     {
-        Time.timeScale = 0.2f;
+        //Time.timeScale = 0.2f;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("Reload Scene");
+            SceneManager.LoadScene(0);
+        }
+
         if (!Input.GetMouseButton(0))
             return;
 
