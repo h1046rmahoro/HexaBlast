@@ -96,6 +96,8 @@ namespace SB
         public void EffectFinish()
         {
             Debug.Log($"state before : {GameState}");
+
+            ReleaseAllHold();
             switch (GameState)
             {
                 case State.Wait:
@@ -118,8 +120,14 @@ namespace SB
                     GameState = State.Wait;
                     break;
                 case State.Move:
-                    MoveBlock();
-                    BlockGenerate();
+                    bool isMoveFinish = true;
+                    if (MoveBlock())
+                        isMoveFinish = false;
+                    if (BlockGenerate())
+                        isMoveFinish = false;
+
+                    if (isMoveFinish)
+                        GameState = State.Wait;
                     break;
                 case State.MoveCheck:
                     break;
@@ -144,11 +152,14 @@ namespace SB
             var matchOrigin = _touchCell.MatchCheck();
             var matchTarget = _targetCell.MatchCheck();
 
+            Debug.Log($"match origin : {matchOrigin.Count}");
+            Debug.Log($"match target : {matchTarget.Count}");
+
             List<BlockDamageData> matchData = new List<BlockDamageData>();
             foreach (var damageData in matchOrigin)
             {
                 bool isContains = false;
-                foreach (var blockDamageData in matchOrigin)
+                foreach (var blockDamageData in matchData)
                 {
                     if (blockDamageData.UniqueKey == damageData.UniqueKey)
                     {
@@ -163,7 +174,7 @@ namespace SB
             foreach (var damageData in matchTarget)
             {
                 bool isContains = false;
-                foreach (var blockDamageData in matchOrigin)
+                foreach (var blockDamageData in matchData)
                 {
                     if (blockDamageData.UniqueKey == damageData.UniqueKey)
                     {
@@ -174,6 +185,8 @@ namespace SB
                 if (!isContains)
                     matchData.Add(damageData);
             }
+
+            Debug.Log($"match : {matchData.Count}");
 
             if (matchData.Count >= 3)
             {
@@ -428,7 +441,8 @@ namespace SB
         /// <summary>
         /// 블록 생성 
         /// </summary>
-        private void BlockGenerate()
+        /// <returns> 블록 생성 여부. 생성 블록이 있는경우 true </returns>
+        private bool BlockGenerate()
         {
             List<EffectData> effectDatas = new List<EffectData>();
             
@@ -454,9 +468,15 @@ namespace SB
             }
 
             OnBlockEffect?.Invoke(effectDatas);
+
+            return effectDatas.Count > 0;
         }
 
-        private void MoveBlock()
+        /// <summary>
+        /// 블록 이동 
+        /// </summary>
+        /// <returns> 블록 이동 여부. 이동한 블록이 있으면 true </returns>
+        private bool MoveBlock()
         {
             List<EffectData> effectDatas = new List<EffectData>();
             
@@ -474,9 +494,16 @@ namespace SB
                 {
                     effectDatas.AddRange(_cells[x][y].PullBlockSide());
                 }
+                // 우측 이동 보정을위해 2회 루프 
+                for (int x = 0; x < XCount; ++x)
+                {
+                    effectDatas.AddRange(_cells[x][y].PullBlockSide());
+                }
             }
             
             OnBlockEffect?.Invoke(effectDatas);
+
+            return effectDatas.Count > 0;
         }
 
         private void MatchingCheck()
@@ -488,6 +515,17 @@ namespace SB
         {
             _blockModels[uniqueKey].IsEffect = false;
         }
-        
+
+        private void ReleaseAllHold()
+        {
+            for (int x = 0; x < XCount; ++x)
+            {
+                for (int y = 0; y < YCount; ++y)
+                {
+                    _cells[x][y].IsHold = false;
+                }
+            }
+            
+        }
     }
 }

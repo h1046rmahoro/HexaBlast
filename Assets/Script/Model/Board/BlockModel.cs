@@ -56,6 +56,30 @@ namespace SB
         }
 
         /// <summary>
+        /// 매칭 가능 여부 
+        /// </summary>
+        public bool IsMatchAble
+        {
+            get
+            {
+                switch (_type)
+                {
+                    case Type.Blue:
+                    case Type.Green:
+                    case Type.Orange:
+                    case Type.Purple:
+                    case Type.Red:
+                    case Type.Yellow:
+                        return true;
+                    default:
+                        break;
+                }
+                
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 스왑 가능여부 
         /// </summary>
         public bool IsSwapAble
@@ -70,6 +94,8 @@ namespace SB
                     case Type.Purple:
                     case Type.Red:
                     case Type.Yellow:
+                        return true;
+                    case Type.Top:
                         return true;
                     default:
                         break;

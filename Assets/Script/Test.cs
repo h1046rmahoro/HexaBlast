@@ -12,7 +12,7 @@ public class Test : MonoBehaviour
 
     private void Start()
     {
-        Time.timeScale = 0.1f;
+        Time.timeScale = 0.2f;
     }
 
     // Update is called once per frame

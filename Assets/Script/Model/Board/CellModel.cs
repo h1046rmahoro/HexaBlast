@@ -53,6 +53,11 @@ namespace SB
             }
         }
 
+        /// <summary>
+        /// 임시 셀 이동 불가 설정 
+        /// </summary>
+        public bool IsHold = false;
+
         public CellModel(int index, float x, float y) : this(index, new Vector2(x, y))
         {
 
@@ -172,6 +177,10 @@ namespace SB
         {
             List<EffectData> moveData = new List<EffectData>();
 
+            // 홀드된 셀은 블록 이동 불가 
+            if (IsHold)
+                return moveData;
+            
             if (!IsEnable)
                 return moveData;
             
@@ -183,21 +192,12 @@ namespace SB
             CellModel targetCell = null;
 
             // 상단 블록 찾기 
-            while (topCell != null && blockModel == null)
-            {
-                // 블록이 연출중인경우 이동 할 수 없음 
-                if(topCell.Block != null)
-                {
-                    if (topCell.Block.IsEffect)
-                        break;
-                }
-                
-                blockModel = topCell.Block;
-                targetCell = topCell;
-                
-                // 상단블록 설정 
-                topCell = topCell.Top;
-            }
+            blockModel = topCell.Block;
+            targetCell = topCell;
+            
+            // 상단에 가져올 셀이 있는경우 홀드 
+            if(topCell.IsEnable)
+                IsHold = true;
 
             // 블록이 있는 경우 위치 변경 
             if (blockModel != null)
@@ -211,6 +211,10 @@ namespace SB
         public List<EffectData> PullBlockSide()
         {
             List<EffectData> moveData = new List<EffectData>();
+
+            // 홀드된 셀은 블록 이동 불가 
+            if (IsHold)
+                return moveData;
 
             if (!IsEnable)
                 return moveData;
@@ -252,6 +256,13 @@ namespace SB
             // 블록이 있는 경우 위치 변경 
             if (blockModel != null)
             {
+                CellModel topCell = Top;
+                while (topCell != null)
+                {
+                    topCell.IsHold = true;
+                    topCell = topCell.Top;
+                }
+                
                 return SwapBlock(targetCell);
             }
             
@@ -329,7 +340,10 @@ namespace SB
         {
             BlockModel.Type type = Block.BlockType;
             List<BlockDamageData> matchBlock = new List<BlockDamageData>();
-            Queue<MatchSearchData> searchCell = new Queue<MatchSearchData>();
+
+            // 매칭 할 수 없는 블록은 검사하지 않음 
+            if (!Block.IsMatchAble)
+                return matchBlock;
 
             var lt = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.LeftTop }, type);
             var t = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.Top }, type);
