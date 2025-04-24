@@ -84,7 +84,6 @@ namespace SB
             Damage,
             SwapBack,
             Move,
-            MoveCheck
         }
 
         /// <summary>
@@ -110,6 +109,8 @@ namespace SB
                     CheckSwapMatch();
                     break;
                 case State.Matching:
+                    if (!MatchingCheck())
+                        GameState = State.Wait;
                     break;
                 case State.Damage:
                     GameState = State.Move;
@@ -126,10 +127,12 @@ namespace SB
                     if (BlockGenerate())
                         isMoveFinish = false;
 
+                    // 이동 종료 
                     if (isMoveFinish)
-                        GameState = State.Wait;
-                    break;
-                case State.MoveCheck:
+                    {
+                        GameState = State.Matching;
+                        EffectFinish();
+                    }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -151,9 +154,6 @@ namespace SB
         {
             var matchOrigin = _touchCell.MatchCheck();
             var matchTarget = _targetCell.MatchCheck();
-
-            Debug.Log($"match origin : {matchOrigin.Count}");
-            Debug.Log($"match target : {matchTarget.Count}");
 
             List<BlockDamageData> matchData = new List<BlockDamageData>();
             foreach (var damageData in matchOrigin)
@@ -506,9 +506,37 @@ namespace SB
             return effectDatas.Count > 0;
         }
 
-        private void MatchingCheck()
+        private bool MatchingCheck()
         {
-            
+            List<BlockDamageData> damageDatas = new List<BlockDamageData>();
+
+            for (int x = 0; x < XCount; ++x)
+            {
+                for (int y = 0; y < YCount; ++y)
+                {
+                    var matchData = _cells[x][y].MatchCheck();
+                    foreach (var damageData in matchData)
+                    {
+                        bool isContains = false;
+                        foreach (var blockDamageData in damageDatas)
+                        {
+                            if (blockDamageData.UniqueKey == damageData.UniqueKey)
+                            {
+                                isContains = true;
+                                break;
+                            }
+                        }
+                        if (!isContains)
+                            damageDatas.Add(damageData);
+                    }
+                }
+            }
+
+            Debug.Log($"match : {damageDatas.Count}");
+            BlockDamageEvent(damageDatas);
+
+            return damageDatas.Count > 0;
+
         }
 
         public void BlockEffectComplete(int uniqueKey)

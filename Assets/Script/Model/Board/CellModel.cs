@@ -338,8 +338,13 @@ namespace SB
 
         public List<BlockDamageData> MatchCheck()
         {
-            BlockModel.Type type = Block.BlockType;
             List<BlockDamageData> matchBlock = new List<BlockDamageData>();
+            
+            // 블록이 없는경우 매칭 불가 
+            if (Block == null)
+                return matchBlock;
+            
+            BlockModel.Type type = Block.BlockType;
 
             // 매칭 할 수 없는 블록은 검사하지 않음 
             if (!Block.IsMatchAble)
