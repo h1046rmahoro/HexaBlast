@@ -14,11 +14,14 @@ namespace SB
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
+            Application.targetFrameRate = 60;
+            
             _gameModel = new GameModel();
             _gameModel.OnBlockEffect += BlockEffect;
 
             gameView.OnEffectFinish += EffectFinish;
             gameView.OnEffectComplete += BlockEffectComplete;
+            gameView.OnTouch += Touch;
             gameView.InitBoard(_gameModel.CellDataList);
         }
 

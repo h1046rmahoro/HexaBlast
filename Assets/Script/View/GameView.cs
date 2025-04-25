@@ -15,7 +15,12 @@ namespace SB
         /// 연출 종료 이벤트 
         /// </summary>
         public event Action OnEffectFinish = null;
-        
+
+        /// <summary>
+        /// 터치 이벤트 
+        /// </summary>
+        public event Action<TouchPhase, Vector2> OnTouch = null; 
+
         /// <summary>
         /// 셀 부모 오브젝트 
         /// </summary>
@@ -42,6 +47,27 @@ namespace SB
 
         private Dictionary<int, BlockView> _blockViews = new Dictionary<int, BlockView>();
 
+        // Update is called once per frame
+        void Update()
+        {
+            if (!Input.GetMouseButton(0))
+                return;
+
+            var mPos = Input.mousePosition;
+
+            var pos = Camera.main.ScreenToWorldPoint(mPos);
+            pos.z = 0;
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                OnTouch?.Invoke(TouchPhase.Began, pos);
+            }
+            else
+            {
+                OnTouch?.Invoke(TouchPhase.Moved, pos);
+            }
+        }
+        
         /// <summary>
         /// 최초 보드 생성 
         /// </summary>
