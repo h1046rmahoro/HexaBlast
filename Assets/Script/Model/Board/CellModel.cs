@@ -380,8 +380,6 @@ namespace SB
                     matchBlock.Add(data);
             }
 
-            Debug.Log($"square : {matchBlock.Count}");
-
             var lt = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.LeftTop }, type);
             var t = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.Top }, type);
             var rt = MatchLineCheck(new MatchSearchData() { Cell = this, Direction = Direction.RightTop }, type);
@@ -679,6 +677,26 @@ namespace SB
             }
 
             return matchData;
+        }
+
+        public List<BlockDamageData> GetNearBlockDamageData()
+        {
+            List<BlockDamageData> damageDatas = new List<BlockDamageData>();
+
+            if (LeftTop != null && LeftTop.Block != null && !LeftTop.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = LeftTop.Block.UniqueKey, Cell = LeftTop });
+            if (Top != null && Top.Block != null && !Top.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = Top.Block.UniqueKey, Cell = Top });
+            if (Top != null && RightTop.Block != null && !RightTop.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = RightTop.Block.UniqueKey, Cell = RightTop });
+            if (Top != null && RightBottom.Block != null && !RightBottom.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = RightBottom.Block.UniqueKey, Cell = RightBottom });
+            if (Top != null && Bottom.Block != null && !Bottom.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = Bottom.Block.UniqueKey, Cell = Bottom });
+            if (Top != null && LeftBottom.Block != null && !LeftBottom.Block.IsMatchAble)
+                damageDatas.Add(new BlockDamageData() { UniqueKey = LeftBottom.Block.UniqueKey, Cell = LeftBottom });
+
+            return damageDatas;
         }
         
     }

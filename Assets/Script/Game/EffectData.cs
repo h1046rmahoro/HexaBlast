@@ -28,9 +28,14 @@ namespace SB
         public BlockMoveData MoveData;
 
         /// <summary>
-        /// 블록 데미지 데이터 
+        /// 블록 체력 
         /// </summary>
-        public BlockDamageData DamageData;
+        public int BlockHp;
+
+        /// <summary>
+        /// 블록 종류 
+        /// </summary>
+        public BlockModel.Type BlockType;
 
         /// <summary>
         /// 블록 생성 이벤트 

@@ -32,8 +32,11 @@ namespace SB
                 case BlockModel.Type.Yellow:
                     _sprRenderer.sprite = _sprNormal[((int)type)-1];
                     break;
-                case BlockModel.Type.Top:
+                case BlockModel.Type.Top_2:
                     _sprRenderer.sprite = _sprNormal[6];
+                    break;
+                case BlockModel.Type.Top_1:
+                    _sprRenderer.sprite = _sprNormal[7];
                     break;
                 default:
                     break;
@@ -68,7 +71,16 @@ namespace SB
                         yield return MoveRoutine(data, finishCallback);
                         break;
                     case EffectData.EffectType.Damage:
-                        _sprRenderer.enabled = false;
+                        if(data.BlockType == BlockModel.Type.Top_2)
+                        {
+                            SetSprite(BlockModel.Type.Top_1);
+                        }
+
+                        if (data.BlockHp <= 0)
+                        {
+                            _sprRenderer.enabled = false;
+                        }
+
                         finishCallback.Invoke(UniqueKey, _blockEffectDatas.Count);
                         break;
                     default:

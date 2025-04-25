@@ -94,8 +94,6 @@ namespace SB
 
         public void EffectFinish()
         {
-            Debug.Log($"state before : {GameState}");
-
             ReleaseAllHold();
             switch (GameState)
             {
@@ -137,8 +135,6 @@ namespace SB
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
-            Debug.Log($"state : {GameState}");
         }
 
         public void Update()
@@ -186,7 +182,22 @@ namespace SB
                     matchData.Add(damageData);
             }
 
-            Debug.Log($"match : {matchData.Count}");
+            var nearBlockData = AddNearBlockDamage(matchData);
+            foreach (var damageData in nearBlockData)
+            {
+                bool isContains = false;
+                foreach (var blockDamageData in matchData)
+                {
+                    if (blockDamageData.UniqueKey == damageData.UniqueKey)
+                    {
+                        isContains = true;
+                        break;
+                    }
+                }
+                if (!isContains)
+                    matchData.Add(damageData);
+            }
+            
 
             if (matchData.Count >= 3)
             {
@@ -228,7 +239,7 @@ namespace SB
                     CellModel cell = new CellModel(x * YCount + y, origin.x + (x * 52.5f), origin.y + (y * 60) + shift);
                     
                     // 셀 활성여부 설정 
-                    cell.IsEnable = blockType != 0;
+                    cell.IsEnable = blockType != 0 && blockType != 99;
 
                     // 블록 생성 
                     var blockModel = cell.CreateBlock(blockType);
@@ -410,7 +421,6 @@ namespace SB
                 
                 // 스왑 이벤트 호출 
                 OnBlockEffect?.Invoke(blockMoveData);
-
             }
         }
 
@@ -422,7 +432,9 @@ namespace SB
             // 블록 데미지 설정 
             foreach (var data in damageData)
             {
-                data.Cell.Block.Hp -= 1;
+                var blockType = data.Cell.Block.BlockType;
+                int blockHp = data.Cell.Block.Hp -= 1;
+                
                 if (data.Cell.Block.Hp <= 0)
                     data.Cell.Block = null;
                 
@@ -430,7 +442,8 @@ namespace SB
                 {
                     Type = EffectData.EffectType.Damage,
                     UniqueKey = data.UniqueKey,
-                    DamageData = data
+                    BlockType = blockType,
+                    BlockHp = blockHp
                 });
             }
 
@@ -506,6 +519,10 @@ namespace SB
             return effectDatas.Count > 0;
         }
 
+        /// <summary>
+        /// 매칭 검사
+        /// </summary>
+        /// <returns> 매칭 결과가 있는지 여부 </returns>
         private bool MatchingCheck()
         {
             List<BlockDamageData> damageDatas = new List<BlockDamageData>();
@@ -532,17 +549,56 @@ namespace SB
                 }
             }
 
+            var nearBlockData = AddNearBlockDamage(damageDatas);
+            foreach (var damageData in nearBlockData)
+            {
+                bool isContains = false;
+                foreach (var blockDamageData in damageDatas)
+                {
+                    if (blockDamageData.UniqueKey == damageData.UniqueKey)
+                    {
+                        isContains = true;
+                        break;
+                    }
+                }
+                if (!isContains)
+                    damageDatas.Add(damageData);
+            }
+
             BlockDamageEvent(damageDatas);
 
             return damageDatas.Count > 0;
-
         }
 
+        /// <summary>
+        /// 주변 블록 데미지 정보 
+        /// </summary>
+        /// <param name="matchBlocks"> 매칭된 블록 리스트  </param>
+        /// <returns></returns>
+        private List<BlockDamageData> AddNearBlockDamage(List<BlockDamageData> matchBlocks)
+        {
+            List<BlockDamageData> damageDatas = new List<BlockDamageData>();
+
+            foreach (var matchBlock in matchBlocks)
+            {
+                damageDatas.AddRange(matchBlock.Cell.GetNearBlockDamageData());
+            }
+
+            return damageDatas;
+        }
+
+        /// <summary>
+        /// 블록의 연출 종료 콜백 
+        /// </summary>
+        /// <param name="uniqueKey"> 연출이 종료된 블록의 유니크 키 값 </param>
         public void BlockEffectComplete(int uniqueKey)
         {
             _blockModels[uniqueKey].IsEffect = false;
         }
 
+        /// <summary>
+        /// 모든 셀의 잠금 해제 
+        /// </summary>
         private void ReleaseAllHold()
         {
             for (int x = 0; x < XCount; ++x)

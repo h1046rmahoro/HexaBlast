@@ -17,7 +17,8 @@ namespace SB
             Red,
             Yellow,
             
-            Top = 9,
+            Top_2 = 9,
+            Top_1,
             Generator = 99
         }
 
@@ -95,7 +96,7 @@ namespace SB
                     case Type.Red:
                     case Type.Yellow:
                         return true;
-                    case Type.Top:
+                    case Type.Top_2:
                         return true;
                     default:
                         break;
@@ -115,7 +116,7 @@ namespace SB
             _type = type;
             _uniqueKey = ++_uniqueKeyGenerator;
 
-            if (type == Type.Top)
+            if (type == Type.Top_2)
                 Hp = 2;
         }
     }
