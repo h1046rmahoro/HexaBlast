@@ -19,7 +19,7 @@ namespace SB
         /// <summary>
         /// 루트 3 절반 
         /// </summary>
-        private const float _sqrt3Harf = 0.866f;
+        private const float _sqrt3Half = 0.866f;
 
         public Hexagon(Vector2 pos)
         {
@@ -33,7 +33,7 @@ namespace SB
             double dy = Math.Abs(pos.y - Center.y) / Radius;
         
             // 경계 검사
-            return dy <= _sqrt3Harf && dy + dx * _sqrt3 <= _sqrt3;
+            return dy <= _sqrt3Half && dy + dx * _sqrt3 <= _sqrt3;
         }
     }
 }
