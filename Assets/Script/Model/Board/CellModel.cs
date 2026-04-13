@@ -161,17 +161,17 @@ namespace SB
             if (cell == null)
                 return false;
 
-            if (LeftTop.Index == cell.Index)
+            if (LeftTop != null && LeftTop.Index == cell.Index)
                 return true;
-            if (Top.Index == cell.Index)
+            if (Top != null && Top.Index == cell.Index)
                 return true;
-            if (RightTop.Index == cell.Index)
+            if (RightTop != null && RightTop.Index == cell.Index)
                 return true;
-            if (LeftBottom.Index == cell.Index)
+            if (LeftBottom != null && LeftBottom.Index == cell.Index)
                 return true;
-            if (Bottom.Index == cell.Index)
+            if (Bottom != null && Bottom.Index == cell.Index)
                 return true;
-            if (RightBottom.Index == cell.Index)
+            if (RightBottom != null && RightBottom.Index == cell.Index)
                 return true;
 
             return false;
@@ -205,11 +205,14 @@ namespace SB
             CellModel topCell = Top;
             CellModel targetCell = null;
 
-            // 상단 블록 찾기 
+            if (topCell == null)
+                return moveData;
+
+            // 상단 블록 찾기
             blockModel = topCell.Block;
             targetCell = topCell;
-            
-            // 상단에 가져올 셀이 있는경우 홀드 
+
+            // 상단에 가져올 셀이 있는경우 홀드
             if(topCell.IsEnable)
                 IsHold = true;
 
@@ -570,12 +573,12 @@ namespace SB
             int count = 0;
 
             var blockType = Block.BlockType;
-            if (LeftTop.IsSameBlock(blockType)) ++count;
-            if (Top.IsSameBlock(blockType)) ++count;
-            if (RightTop.IsSameBlock(blockType)) ++count;
-            if (RightBottom.IsSameBlock(blockType)) ++count;
-            if (Bottom.IsSameBlock(blockType)) ++count;
-            if (LeftBottom.IsSameBlock(blockType)) ++count;
+            if (LeftTop != null && LeftTop.IsSameBlock(blockType)) ++count;
+            if (Top != null && Top.IsSameBlock(blockType)) ++count;
+            if (RightTop != null && RightTop.IsSameBlock(blockType)) ++count;
+            if (RightBottom != null && RightBottom.IsSameBlock(blockType)) ++count;
+            if (Bottom != null && Bottom.IsSameBlock(blockType)) ++count;
+            if (LeftBottom != null && LeftBottom.IsSameBlock(blockType)) ++count;
 
             return count;
         }
@@ -590,27 +593,27 @@ namespace SB
             
             var blockType = Block.BlockType;
 
-            if (LeftTop.IsSameBlock(blockType))
+            if (LeftTop != null && LeftTop.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(LeftTop));
             }
-            if (Top.IsSameBlock(blockType))
+            if (Top != null && Top.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(Top));
             }
-            if (RightTop.IsSameBlock(blockType))
+            if (RightTop != null && RightTop.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(RightTop));
             }
-            if (RightBottom.IsSameBlock(blockType))
+            if (RightBottom != null && RightBottom.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(RightBottom));
             }
-            if (Bottom.IsSameBlock(blockType))
+            if (Bottom != null && Bottom.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(Bottom));
             }
-            if (LeftBottom.IsSameBlock(blockType))
+            if (LeftBottom != null && LeftBottom.IsSameBlock(blockType))
             {
                 matchData.AddRange(MatchSquareCheck(LeftBottom));
             }
@@ -687,13 +690,13 @@ namespace SB
                 damageDatas.Add(new BlockDamageData() { UniqueKey = LeftTop.Block.UniqueKey, Cell = LeftTop });
             if (Top != null && Top.Block != null && !Top.Block.IsMatchAble)
                 damageDatas.Add(new BlockDamageData() { UniqueKey = Top.Block.UniqueKey, Cell = Top });
-            if (Top != null && RightTop.Block != null && !RightTop.Block.IsMatchAble)
+            if (RightTop != null && RightTop.Block != null && !RightTop.Block.IsMatchAble)
                 damageDatas.Add(new BlockDamageData() { UniqueKey = RightTop.Block.UniqueKey, Cell = RightTop });
-            if (Top != null && RightBottom.Block != null && !RightBottom.Block.IsMatchAble)
+            if (RightBottom != null && RightBottom.Block != null && !RightBottom.Block.IsMatchAble)
                 damageDatas.Add(new BlockDamageData() { UniqueKey = RightBottom.Block.UniqueKey, Cell = RightBottom });
-            if (Top != null && Bottom.Block != null && !Bottom.Block.IsMatchAble)
+            if (Bottom != null && Bottom.Block != null && !Bottom.Block.IsMatchAble)
                 damageDatas.Add(new BlockDamageData() { UniqueKey = Bottom.Block.UniqueKey, Cell = Bottom });
-            if (Top != null && LeftBottom.Block != null && !LeftBottom.Block.IsMatchAble)
+            if (LeftBottom != null && LeftBottom.Block != null && !LeftBottom.Block.IsMatchAble)
                 damageDatas.Add(new BlockDamageData() { UniqueKey = LeftBottom.Block.UniqueKey, Cell = LeftBottom });
 
             return damageDatas;
